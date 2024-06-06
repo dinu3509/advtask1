@@ -1,0 +1,67 @@
+Spotify API Setup
+
+1)Importing Libraries:
+
+import pickle: Imports the pickle library for loading serialized objects.
+import streamlit as st: Imports the Streamlit library for building the web interface.
+import spotipy: Imports the Spotipy library, a lightweight Python library for the Spotify Web API.
+from spotipy.oauth2 import SpotifyClientCredentials: Imports the SpotifyClientCredentials for handling Spotify API credentials.
+
+
+
+2)Setting Spotify API Credentials:
+
+CLIENT_ID and CLIENT_SECRET: These are the credentials required to access the Spotify API.
+client_credentials_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET): This initializes the Spotify client credentials manager with the provided client ID and secret.
+sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager): This creates an instance of the Spotify client using the credentials manager.
+
+
+Function to Get Album Cover URL
+1)Defining the Function to Get Album Cover URL:
+def get_song_album_cover_url(song_name, artist_name):: This defines a function that takes a song name and artist name as input and returns the URL of the song's album cover.
+search_query = f"track:{song_name} artist:{artist_name}": This constructs a search query string for the Spotify API.
+results = sp.search(q=search_query, type="track"): This searches for the track on Spotify using the constructed query.
+if results and results["tracks"]["items"]:: This checks if any results were returned.
+track = results["tracks"]["items"][0]: This gets the first track from the search results.
+album_cover_url = track["album"]["images"][0]["url"]: This gets the URL of the album cover image.
+print(album_cover_url): Prints the album cover URL (for debugging).
+return album_cover_url: Returns the album cover URL.
+else: return "https://i.postimg.cc/0QNxYz4V/social.png": If no results are found, returns a default image URL.
+
+
+Recommender Function
+1)Defining the Recommender Function:
+def recommend(song):: This defines a function that takes a song name as input and returns a list of recommended song names and their album cover URLs.
+index = music[music['song'] == song].index[0]: This finds the index of the input song in the DataFrame music.
+distances = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda x: x[1]): This sorts the songs based on similarity scores in descending order.
+recommended_music_names = []: Initializes an empty list to store recommended song names.
+recommended_music_posters = []: Initializes an empty list to store recommended song album cover URLs.
+for i in distances[1:6]:: Iterates over the top 5 most similar songs.
+artist = music.iloc[i[0]].artist: Gets the artist name of the recommended song.
+print(artist): Prints the artist name (for debugging).
+print(music.iloc[i[0]].song): Prints the song name (for debugging).
+recommended_music_posters.append(get_song_album_cover_url(music.iloc[i[0]].song, artist)): Appends the album cover URL of the recommended song to the list.
+recommended_music_names.append(music.iloc[i[0]].song): Appends the name of the recommended song to the list.
+return recommended_music_names, recommended_music_posters: Returns the lists of recommended song names and album cover URLs.
+
+
+Streamlit App
+1)Building the Streamlit Interface:
+
+st.header('Music Recommender System'): Sets the header of the Streamlit app to "Music Recommender System".
+music = pickle.load(open('df.pkl','rb')): Loads the preprocessed music DataFrame from a pickle file.
+similarity = pickle.load(open('similarity.pkl','rb')): Loads the similarity matrix from a pickle file.
+music_list = music['song'].values: Extracts the list of song names from the music DataFrame.
+selected_movie = st.selectbox("Type or select a song from the dropdown", music_list): Creates a dropdown menu for selecting a song from the list of song names.
+
+
+
+2)Displaying Recommendations:
+
+if st.button('Show Recommendation'):: Checks if the "Show Recommendation" button is clicked.
+recommended_music_names, recommended_music_posters = recommend(selected_movie): Gets the recommended song names and album cover URLs by calling the recommend function.
+col1, col2, col3, col4, col5 = st.columns(5): Creates five columns in the Streamlit app to display the recommended songs.
+with col1:: Displays the first recommended song and its album cover in the first column.
+st.text(recommended_music_names[0]): Displays the name of the first recommended song.
+st.image(recommended_music_posters[0]): Displays the album cover of the first recommended song.
+Similar code for col2, col3, col4, and col5 to display the other recommended songs and their album covers.

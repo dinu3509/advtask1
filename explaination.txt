@@ -1,0 +1,65 @@
+Data Loading and Preprocessing
+
+1)Loading the Dataset:
+df = pd.read_csv("spotify_millsongdata.csv"): Loads the Spotify song dataset from a CSV file into a pandas DataFrame.
+
+2)Handling Missing Values:
+df.isnull().sum(): Checks for missing values in the DataFrame.
+df = df.sample(5000).drop('link', axis=1).reset_index(drop=True): Randomly samples 5000 rows from the DataFrame, drops the 'link' column, and resets the index.
+
+3)Text Preprocessing:
+df['text'] = df['text'].str.lower().replace(r'\s+', ' ', regex=True).replace(r'\n', ' ', regex=True): Converts the text in the 'text' column to lowercase and removes extra whitespace and newline characters using regex.
+
+Tokenization and Stemming
+
+1)Setting Up NLTK for Stemming:
+import nltk: Imports the Natural Language Toolkit library.
+from nltk.stem.porter import PorterStemmer: Imports the PorterStemmer for stemming.
+stemmer = PorterStemmer(): Creates an instance of the PorterStemmer.
+
+2)Defining Tokenization and Stemming Function:
+def token(txt):: Defines a function to tokenize and stem text.
+tokens = nltk.word_tokenize(txt): Tokenizes the input text into words.
+stemmed_tokens = [stemmer.stem(w) for w in tokens]: Applies stemming to each token.
+return " ".join(stemmed_tokens): Joins the stemmed tokens back into a single string.
+
+3)Applying Tokenization and Stemming:
+df['text'].apply(lambda x: token(x)): Applies the tokenization and stemming function to the 'text' column of the DataFrame.
+
+TF-IDF Vectorization and Similarity Calculation
+
+1)Setting Up TF-IDF Vectorizer:
+from sklearn.feature_extraction.text import TfidfVectorizer: Imports the TF-IDF vectorizer from Scikit-learn.
+tfid = TfidfVectorizer(analyzer='word', stop_words='english'): Creates a TF-IDF vectorizer object, ignoring English stop words.
+
+2)Creating the TF-IDF Matrix:
+matrix = tfid.fit_transform(df['text']): Fits the TF-IDF vectorizer to the 'text' column and transforms the text data into a TF-IDF matrix.
+
+3)Calculating Cosine Similarity:
+from sklearn.metrics.pairwise import cosine_similarity: Imports the cosine similarity function from Scikit-learn.
+smilar = cosine_similarity(matrix): Computes the cosine similarity between all pairs of TF-IDF vectors in the matrix.
+
+Recommender Function
+
+1)Defining the Recommender Function:
+def recommender(song_name):: Defines a function to recommend similar songs.
+idx = df[df['song'] == song_name].index[0]: Finds the index of the song in the DataFrame.
+distance = sorted(list(enumerate(smilar[idx])), reverse=True, key=lambda x: x[1]): Sorts the songs based on similarity scores in descending order.
+song = []: Initializes an empty list to store recommended songs.
+for s_id in distance[1:21]:: Iterates over the top 20 most similar songs.
+song.append(df.iloc[s_id[0]].song): Appends the song names to the list.
+return song: Returns the list of recommended songs.
+Saving the Model and Data
+
+2)Saving the Similarity Matrix and DataFrame:
+import pickle: Imports the pickle library for serialization.
+pickle.dump(smilar, open("similarity", "wb")): Saves the cosine similarity matrix to a file.
+pickle.dump(df, open("df", "wb")): Saves the DataFrame to a file.
+
+Summary
+
+Data Loading and Preprocessing: Load the dataset, handle missing values, sample the data, and preprocess the text by converting it to lowercase and removing unwanted characters.
+Tokenization and Stemming: Tokenize and stem the text data to reduce it to its root form.
+TF-IDF Vectorization and Similarity Calculation: Transform the text data into a TF-IDF matrix and compute cosine similarity between the songs.
+Recommender Function: Define a function to recommend songs based on cosine similarity scores.
+Saving the Model and Data: Save the similarity matrix and the DataFrame for future use.
